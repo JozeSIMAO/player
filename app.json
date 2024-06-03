@@ -22,6 +22,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7508ef6c-b970-481c-bb3c-f10a6a283e64"
+      }
+    },
+    "owner": "jozesimao10"
   }
 }
