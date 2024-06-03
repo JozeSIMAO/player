@@ -1,9 +1,10 @@
-import { StyleSheet, View, Dimensions, ActivityIndicator } from 'react-native';
+import { StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import React, { Component } from 'react';
 import { AudioContext } from '../context/AudioProvider';
-import { RecyclerListView, LayoutProvider, DataProvider } from 'recyclerlistview';
+import { RecyclerListView, LayoutProvider } from 'recyclerlistview';
 import AudioListItem from '../components/AudioListItem';
-import { getAll } from 'react-native-get-music-files';
+import Screen from '../components/Screen';
+import OptionModal from '../components/OptionModal';
 
 export class AudioList extends Component {
   static contextType = AudioContext;
@@ -11,13 +12,10 @@ export class AudioList extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      audioFiles: [], // Initialize audioFiles state to store fetched data
-      loading: true, // Initialize loading state
+      optionModalVisible: false,
     };
-  }
 
-  async componentDidMount() {
-    await this.getAll(); // Fetch audio files when component mounts
+    this.currentItem = {};
   }
 
   layoutProvider = new LayoutProvider(
@@ -29,55 +27,53 @@ export class AudioList extends Component {
   );
 
   rowRenderer = (type, item) => {
-    getAll();
     return (
-      <AudioListItem title={item.filename}/>
+      <AudioListItem title={item.filename}
+      duration={item.duration}
+      onOptionPress={() => {
+        this.currentItem = item;
+        this.setState({...this.state, optionModalVisible: true})
+      }}/>
     );
   }
 
-  getAll = async () => {
-    try {
-      const audioFiles = await getAll({
-        blured: false,
-        artist: true,
-        duration: true,
-        genre: true,
-        title: true,
-        cover: true,
-        minimumSongDuration: 10000,
-      });
-      console.log(audioFiles.artist);
-
-      this.setState({ audioFiles, loading: false }); // Update state with fetched data
-    } catch (error) {
-      console.error(error);
-      this.setState({ loading: false }); // Update loading state if there's an error
-    }
-  }
-
   render() {
-    const { loading, audioFiles } = this.state;
-
-    if (loading) {
-      // Show loading indicator if data is being fetched
-      return (
-        <View style={styles.loadingIndicator}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      );
-    }
-    const dataProvider = new DataProvider((r1, r2) => {
-      return r1 !== r2; // Change this comparison logic according to your data
-    }).cloneWithRows(audioFiles);
-
     return (
-      <View style={styles.container}>
-        <RecyclerListView
-          dataProvider={dataProvider}
-          layoutProvider={this.layoutProvider}
-          rowRenderer={this.rowRenderer}
-        />
-      </View>
+      <AudioContext.Consumer>
+        {({ dataProvider }) => {
+          if (!dataProvider) {
+            // Handle scenario when dataProvider is not available
+            return <ActivityIndicator style={styles.loadingIndicator} />;
+          }
+
+          return (
+            <Screen>
+              <RecyclerListView
+                dataProvider={dataProvider}
+                layoutProvider={this.layoutProvider}
+                rowRenderer={this.rowRenderer}
+              />
+              <OptionModal
+              onPlayPress={() => {
+                this.context.playbackObj.loadAudio(this.currentItem.uri);
+                this.context.playbackObj.play();
+              }}
+              onPlayListPress={() => {
+                this.context.addToPlayList(this.currentItem);
+              }}
+              onPausePress={() => {
+                this.context.playbackObj.pause();
+              }}
+              onRepeatPress={() => {
+                this.context.playbackObj.setIsLoopingAsync(true);
+              }}
+              currentItem={this.currentItem}
+              onClose={() => this.setState({...this.state, optionModalVisible: false})}
+              visible={this.state.optionModalVisible}/>
+            </Screen>
+          );
+        }}
+      </AudioContext.Consumer>
     );
   }
 }
@@ -87,6 +83,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  audioItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  audioText: {
+    fontSize: 16,
   },
   loadingIndicator: {
     flex: 1,

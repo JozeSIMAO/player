@@ -38,7 +38,7 @@ export class AudioProvider extends Component {
             const { dataProvider, audioFiles } = this.state;
             const media = await MediaLibrary.getAssetsAsync({
                 mediaType: 'audio',
-                first: 50, // You can adjust this number to fetch more or fewer items
+                first: 8000, // You can adjust this number to fetch more or fewer items
                 sortBy: MediaLibrary.SortBy.creationTime,
             });
             this.setState({
@@ -71,6 +71,7 @@ export class AudioProvider extends Component {
             console.log('Permission denied');
         }
     };
+
 
     componentDidMount() {
         this.getPermission();

@@ -5,7 +5,7 @@ export default {
     MODAL_BG: "rgba(0,0,0,0.5)",
     ACTIVE_BG: "#5252ad",
     ACTIVE_FONT: "#fff",
-    APP_BG: '#fff',
+    APP_BG: 'white',
     APP_TEXT: '#000',
     APP_THEME: '#000',
     APP_BTN_BG: '#000',
